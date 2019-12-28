@@ -1,7 +1,11 @@
 
 
-# ok, so I'm gonna write an algorythm to solve sudokus.  I wonder what the best way to represent that data is
+# ok, so I'm gonna write an algorythm to solve sudokus.  
+# I wonder what the best way to represent that data is
 # probably you're standard grid situation, 9*9
+
+# another option is to create separate classes for both a character and a grid.
+# that's the more complex thorough solution.
 
 
 # rules that need to be followed, each column must contain numbers 1-9, 
@@ -21,13 +25,30 @@ initial = [
     [9,0,0,0,0,0,0,5,0],
 ]
 
-
-# okay, so initial thought is: "I have no idea how to do this"
-# this algorithm has been written many times, so I can certainly look it up, but 
-# before I do that I need to give it a decent try
-
-# I'll try and break it down according to moves I would do as a human.
-
+$ruled_out_by_column = {
+        0 => [],
+        1 => [],
+        2 => [],
+        3 => [],
+        4 => [],
+        5 => [],
+        6 => [],
+        7 => [],
+        8 => []
+    }
+# the fact that I'm using a global var means that I should probably be using classes,
+# but I can refactor later
+$ruled_out_by_row = {
+        0 => [],
+        1 => [],
+        2 => [],
+        3 => [],
+        4 => [],
+        5 => [],
+        6 => [],
+        7 => [],
+        8 => []
+    }
 # or, I could just build another map of potentials for each position...
 # I kinda think that's what I'll need to do
 def generate_possibilities grid
@@ -35,19 +56,40 @@ def generate_possibilities grid
     possibilities = Marshal.load(Marshal.dump(grid))
     possibilities.each_with_index do |row, row_number|
         # generate_possibility char
-        ruled_out_by_row = row.select{|x| x.is_a?(Numeric) && x != 0 }
-        row_posibilities = [1,2,3,4,5,6,7,8,9] - ruled_out_by_row
+        ruled_out_by_current_row = row.select{|x| x.is_a?(Numeric) && x != 0 }
+        row_posibilities = [1,2,3,4,5,6,7,8,9] - ruled_out_by_current_row
+        $ruled_out_by_row[row_number] = row_posibilities
         row.each_with_index do |char, char_number|
-            # first of all I'll just generate posibilities based on row rules
-            if char == 0
-                row[char_number] = row_posibilities
-            end
+
         end
     end
 
-    possibilities.each do |row|
-        p row
+    # possibilities.each do |row|
+    #     p row
+    # end
+
+    p $ruled_out_by_row
+    p $ruled_out_by_column
+end
+
+
+
+def generate_column_possibilities grid
+    char_index = 0
+    while char_index < 9
+        column_possibilities = [1,2,3,4,5,6,7,8,9]
+        ruled_out = []
+        row_index = 0
+        while row_index < 9 
+            ruled_out.push(grid[row_index][char_index])
+            row_index += 1
+        end
+        $ruled_out_by_column[char_index] = column_possibilities - ruled_out
+        char_index += 1
     end
 end
 
+
+
+generate_column_possibilities(initial) 
 generate_possibilities(initial)
