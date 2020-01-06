@@ -49,6 +49,7 @@ $ruled_out_by_row = {
         7 => [],
         8 => []
     }
+
 # or, I could just build another map of potentials for each position...
 # I kinda think that's what I'll need to do
 def generate_possibilities grid
@@ -93,3 +94,68 @@ end
 
 generate_column_possibilities(initial) 
 generate_possibilities(initial)
+
+
+
+
+$ruled_out_by_section = {
+    0 => [],
+    1 => [],
+    2 => [],
+    3 => [],
+    4 => [],
+    5 => [],
+    6 => [],
+    7 => [],
+    8 => []
+}
+
+# $section_map = {
+#     []
+# }
+
+    # section 0 -> coordinates 0-2, 0-2
+    # section 1 -> coordinates 0-2, 3-5
+    # section 2 -> coordinates 0-2, 6-8
+
+    # section 3 -> coordinates 3-5, 0-2
+    # section 4 -> coordinates 3-5, 3-5
+    # section 5 -> coordinates 3-5, 6-8
+
+    # section 6 -> coordinates 6-8, 0-2
+    # section 7 -> coordinates 6-8, 3-5
+    # section 8 -> coordinates 6-8, 6-8
+
+    # What would a data structure look like that I could plug any point into 
+    # and return its section number?
+
+    # probably another grid? That's gotta be the easiest thing
+    # keeping the x's and the y's clear could be a bit tricky
+
+$point_to_section_map = [
+    [0,0,0,1,1,1,2,2,2],
+    [0,0,0,1,1,1,2,2,2],
+    [0,0,0,1,1,1,2,2,2],
+    [3,3,3,4,4,4,5,5,5],
+    [3,3,3,4,4,4,5,5,5],
+    [3,3,3,4,4,4,5,5,5],
+    [6,6,6,7,7,7,8,8,8],
+    [6,6,6,7,7,7,8,8,8],
+    [6,6,6,7,7,7,8,8,8],
+]
+# hell yeah, that's easy
+
+def generate_section_possibilities grid
+    (0..8).each do |x|
+        (0..8).each do |y|
+            section_number = $point_to_section_map[x][y]
+            p grid[x][y]
+            if grid[x][y] != 0
+                $ruled_out_by_section[section_number].push(grid[x][y]) 
+            end
+        end
+    end
+end
+
+p generate_section_possibilities(initial)
+p $ruled_out_by_section
