@@ -25,76 +25,41 @@ initial = [
     [9,0,0,0,0,0,0,5,0],
 ]
 
+$point_to_section_map = [
+    [0,0,0,1,1,1,2,2,2],
+    [0,0,0,1,1,1,2,2,2],
+    [0,0,0,1,1,1,2,2,2],
+    [3,3,3,4,4,4,5,5,5],
+    [3,3,3,4,4,4,5,5,5],
+    [3,3,3,4,4,4,5,5,5],
+    [6,6,6,7,7,7,8,8,8],
+    [6,6,6,7,7,7,8,8,8],
+    [6,6,6,7,7,7,8,8,8],
+]
+
 $ruled_out_by_column = {
-        0 => [],
-        1 => [],
-        2 => [],
-        3 => [],
-        4 => [],
-        5 => [],
-        6 => [],
-        7 => [],
-        8 => []
-    }
-# the fact that I'm using a global var means that I should probably be using classes,
-# but I can refactor later
+    0 => [],
+    1 => [],
+    2 => [],
+    3 => [],
+    4 => [],
+    5 => [],
+    6 => [],
+    7 => [],
+    8 => []
+}
+
 $ruled_out_by_row = {
-        0 => [],
-        1 => [],
-        2 => [],
-        3 => [],
-        4 => [],
-        5 => [],
-        6 => [],
-        7 => [],
-        8 => []
-    }
-
-# or, I could just build another map of potentials for each position...
-# I kinda think that's what I'll need to do
-def generate_possibilities grid
-    # some spooky stuff to duplicate the 2 dimensional array
-    possibilities = Marshal.load(Marshal.dump(grid))
-    possibilities.each_with_index do |row, row_number|
-        # generate_possibility char
-        ruled_out_by_current_row = row.select{|x| x.is_a?(Numeric) && x != 0 }
-        row_posibilities = [1,2,3,4,5,6,7,8,9] - ruled_out_by_current_row
-        $ruled_out_by_row[row_number] = row_posibilities
-        row.each_with_index do |char, char_number|
-
-        end
-    end
-
-    # possibilities.each do |row|
-    #     p row
-    # end
-
-    p $ruled_out_by_row
-    p $ruled_out_by_column
-end
-
-
-
-def generate_column_possibilities grid
-    char_index = 0
-    while char_index < 9
-        column_possibilities = [1,2,3,4,5,6,7,8,9]
-        ruled_out = []
-        row_index = 0
-        while row_index < 9 
-            ruled_out.push(grid[row_index][char_index])
-            row_index += 1
-        end
-        $ruled_out_by_column[char_index] = column_possibilities - ruled_out
-        char_index += 1
-    end
-end
-
-
-
-generate_column_possibilities(initial) 
-generate_possibilities(initial)
-
+    0 => [],
+    1 => [],
+    2 => [],
+    3 => [],
+    4 => [],
+    5 => [],
+    6 => [],
+    7 => [],
+    8 => []
+}
 
 
 
@@ -110,46 +75,40 @@ $ruled_out_by_section = {
     8 => []
 }
 
-# $section_map = {
-#     []
-# }
 
-    # section 0 -> coordinates 0-2, 0-2
-    # section 1 -> coordinates 0-2, 3-5
-    # section 2 -> coordinates 0-2, 6-8
 
-    # section 3 -> coordinates 3-5, 0-2
-    # section 4 -> coordinates 3-5, 3-5
-    # section 5 -> coordinates 3-5, 6-8
+def generate_row_possibilities grid
+    # some spooky stuff to duplicate the 2 dimensional array
+    possibilities = Marshal.load(Marshal.dump(grid))
+    possibilities.each_with_index do |row, row_number|
+        # generate_possibility char
+        ruled_out_by_current_row = row.select{|x| x.is_a?(Numeric) && x != 0 }
+        $ruled_out_by_row[row_number] = ruled_out_by_current_row
+    end
+end
 
-    # section 6 -> coordinates 6-8, 0-2
-    # section 7 -> coordinates 6-8, 3-5
-    # section 8 -> coordinates 6-8, 6-8
 
-    # What would a data structure look like that I could plug any point into 
-    # and return its section number?
 
-    # probably another grid? That's gotta be the easiest thing
-    # keeping the x's and the y's clear could be a bit tricky
+def generate_column_possibilities grid
+    char_index = 0
+    while char_index < 9
+        column_possibilities = [1,2,3,4,5,6,7,8,9]
+        ruled_out = []
+        row_index = 0
+        while row_index < 9 
+            ruled_out.push(grid[row_index][char_index]) if grid[row_index][char_index] != 0
+            row_index += 1
+        end
+        $ruled_out_by_column[char_index] = ruled_out
+        char_index += 1
+    end
+end
 
-$point_to_section_map = [
-    [0,0,0,1,1,1,2,2,2],
-    [0,0,0,1,1,1,2,2,2],
-    [0,0,0,1,1,1,2,2,2],
-    [3,3,3,4,4,4,5,5,5],
-    [3,3,3,4,4,4,5,5,5],
-    [3,3,3,4,4,4,5,5,5],
-    [6,6,6,7,7,7,8,8,8],
-    [6,6,6,7,7,7,8,8,8],
-    [6,6,6,7,7,7,8,8,8],
-]
-# hell yeah, that's easy
 
 def generate_section_possibilities grid
     (0..8).each do |x|
         (0..8).each do |y|
             section_number = $point_to_section_map[x][y]
-            p grid[x][y]
             if grid[x][y] != 0
                 $ruled_out_by_section[section_number].push(grid[x][y]) 
             end
@@ -157,5 +116,25 @@ def generate_section_possibilities grid
     end
 end
 
-p generate_section_possibilities(initial)
-p $ruled_out_by_section
+
+def generate_possibilities grid
+    generate_row_possibilities(grid)
+    generate_column_possibilities(grid)
+    generate_section_possibilities(grid)
+
+    p $ruled_out_by_row
+    p $ruled_out_by_column
+    p $ruled_out_by_section
+end
+
+def generate_possibilities_for_a_point(x, y)
+    possibilities = [1,2,3,4,5,6,7,8,9] - $ruled_out_by_row[x]
+    possibilities = possibilities - $ruled_out_by_column[y]
+    section_number = $point_to_section_map[x][y]
+    possibilities = possibilities - $ruled_out_by_section[section_number]
+    p possibilities
+end
+
+generate_possibilities(initial)
+
+generate_possibilities_for_a_point(1,5)
