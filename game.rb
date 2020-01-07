@@ -117,24 +117,41 @@ def generate_section_possibilities grid
 end
 
 
-def generate_possibilities grid
-    generate_row_possibilities(grid)
-    generate_column_possibilities(grid)
-    generate_section_possibilities(grid)
-
-    p $ruled_out_by_row
-    p $ruled_out_by_column
-    p $ruled_out_by_section
-end
 
 def generate_possibilities_for_a_point(x, y)
     possibilities = [1,2,3,4,5,6,7,8,9] - $ruled_out_by_row[x]
     possibilities = possibilities - $ruled_out_by_column[y]
     section_number = $point_to_section_map[x][y]
     possibilities = possibilities - $ruled_out_by_section[section_number]
-    p possibilities
 end
 
-generate_possibilities(initial)
 
-generate_possibilities_for_a_point(1,5)
+def generate_possibilities grid
+    generate_row_possibilities(grid)
+    generate_column_possibilities(grid)
+    generate_section_possibilities(grid)
+    
+    p $ruled_out_by_row
+    p $ruled_out_by_column
+    p $ruled_out_by_section
+
+    (0..8).each do |x|
+        (0..8).each do |y|
+            if grid[y][x] == 0 
+                possibilities = generate_possibilities_for_a_point(x, y)
+                if possibilities.length == 1
+                    p $ruled_out_by_row[x]
+                    p $ruled_out_by_column[y]
+                    section_number = $point_to_section_map[x][y]
+                    p section_number
+                    p grid[y][x]
+                    p $ruled_out_by_section[section_number]
+                    return [x,y, possibilities]
+                end
+            end
+        end
+    end
+end
+
+
+p generate_possibilities(initial)
