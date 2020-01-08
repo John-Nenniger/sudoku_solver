@@ -25,7 +25,9 @@ initial = [
     [9,0,0,0,0,0,0,5,0],
 ]
 
-$point_to_section_map = [
+# the grid needs to be accessed like this grid[y][x]
+
+$point_to_section_map = [ # grid[0][5] => 1
     [0,0,0,1,1,1,2,2,2],
     [0,0,0,1,1,1,2,2,2],
     [0,0,0,1,1,1,2,2,2],
@@ -37,7 +39,7 @@ $point_to_section_map = [
     [6,6,6,7,7,7,8,8,8],
 ]
 
-$ruled_out_by_column = {
+$ruled_out_by_column = { # grid[*][column_number]
     0 => [],
     1 => [],
     2 => [],
@@ -49,7 +51,7 @@ $ruled_out_by_column = {
     8 => []
 }
 
-$ruled_out_by_row = {
+$ruled_out_by_row = { # grid[row_number][*]
     0 => [],
     1 => [],
     2 => [],
@@ -120,9 +122,13 @@ end
 
 def generate_possibilities_for_a_point(x, y)
     possibilities = [1,2,3,4,5,6,7,8,9] - $ruled_out_by_row[x]
+    # p $ruled_out_by_row[x], 125
     possibilities = possibilities - $ruled_out_by_column[y]
     section_number = $point_to_section_map[x][y]
+    # p $ruled_out_by_column[y]
     possibilities = possibilities - $ruled_out_by_section[section_number]
+    # p $ruled_out_by_section[section_number], 130
+    return possibilities
 end
 
 
@@ -135,17 +141,12 @@ def generate_possibilities grid
     p $ruled_out_by_column
     p $ruled_out_by_section
 
-    (0..8).each do |x|
-        (0..8).each do |y|
-            if grid[y][x] == 0 
+    (0..8).each do |y|
+        (0..8).each do |x|
+            if grid[x][y] == 0 
                 possibilities = generate_possibilities_for_a_point(x, y)
                 if possibilities.length == 1
-                    p $ruled_out_by_row[x]
-                    p $ruled_out_by_column[y]
                     section_number = $point_to_section_map[x][y]
-                    p section_number
-                    p grid[y][x]
-                    p $ruled_out_by_section[section_number]
                     return [x,y, possibilities]
                 end
             end
@@ -155,3 +156,5 @@ end
 
 
 p generate_possibilities(initial)
+
+# p generate_possibilities_for_a_point(0, 5)
