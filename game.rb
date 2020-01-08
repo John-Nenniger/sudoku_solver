@@ -141,20 +141,38 @@ def generate_possibilities grid
     p $ruled_out_by_column
     p $ruled_out_by_section
 
+end
+
+def solve(grid)
+    p "solve called"
     (0..8).each do |y|
         (0..8).each do |x|
             if grid[x][y] == 0 
                 possibilities = generate_possibilities_for_a_point(x, y)
                 if possibilities.length == 1
+                    grid[x][y] = possibilities[0]
+                    p [x, y], possibilities[0]
+                    $ruled_out_by_row[x].push(possibilities[0])
+                    $ruled_out_by_column[y].push(possibilities[0])
                     section_number = $point_to_section_map[x][y]
-                    return [x,y, possibilities]
+                    $ruled_out_by_section[section_number].push(possibilities[0])
+                    return solve(grid)
                 end
             end
         end
     end
+    p $ruled_out_by_row
+    p $ruled_out_by_column
+    p $ruled_out_by_section
+
+    return true
 end
 
 
-p generate_possibilities(initial)
+generate_possibilities(initial)
+
+p solve(initial)
+
+
 
 # p generate_possibilities_for_a_point(0, 5)
