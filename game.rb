@@ -48,7 +48,7 @@ class Game
             7 => [],
             8 => []
         }
-
+        @grid = grid
         generate_possibilities(grid)
     end
 
@@ -56,22 +56,15 @@ class Game
         generate_row_possibilities(grid)
         generate_column_possibilities(grid)
         generate_section_possibilities(grid)
-        
-        p @ruled_out_by_row
-        p @ruled_out_by_column
-        p @ruled_out_by_section
-
     end
 
-    def solve(grid)
-        p "solve called"
+    def solve_by_strict_elimination
         (0..8).each do |y|
             (0..8).each do |x|
                 if grid[x][y] == 0 
                     possibilities = generate_possibilities_for_a_point(x, y)
                     if possibilities.length == 1
                         grid[x][y] = possibilities[0]
-                        p [x, y], possibilities[0]
                         @ruled_out_by_row[x].push(possibilities[0])
                         @ruled_out_by_column[y].push(possibilities[0])
                         section_number = @@point_to_section_map[x][y]
@@ -81,11 +74,32 @@ class Game
                 end
             end
         end
-        p @ruled_out_by_row
-        p @ruled_out_by_column
-        p @ruled_out_by_section
+    end
 
+
+    def solved?
+        @grid.each do |row|
+            if row.include? 0
+                return false
+            end
+        end
         return true
+    end
+
+    def ruled_out_by_column
+        @ruled_out_by_column
+    end
+
+    def ruled_out_by_row
+        @ruled_out_by_row
+    end
+
+    def ruled_out_by_section
+        @ruled_out_by_section
+    end
+
+    def grid
+        @grid
     end
 
     private
@@ -153,3 +167,52 @@ first_game = Game.new([
     [9,0,0,0,0,0,0,5,0],
 ])
 
+
+p first_game.ruled_out_by_row
+p first_game.ruled_out_by_column
+p first_game.ruled_out_by_section
+p first_game.grid
+p first_game.solved?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ # def solve(grid)
+    #     (0..8).each do |y|
+    #         (0..8).each do |x|
+    #             if grid[x][y] == 0 
+    #                 possibilities = generate_possibilities_for_a_point(x, y)
+    #                 if possibilities.length == 1
+    #                     grid[x][y] = possibilities[0]
+    #                     # p [x, y], possibilities[0]
+    #                     @ruled_out_by_row[x].push(possibilities[0])
+    #                     @ruled_out_by_column[y].push(possibilities[0])
+    #                     section_number = @@point_to_section_map[x][y]
+    #                     @ruled_out_by_section[section_number].push(possibilities[0])
+    #                     return solve(grid)
+    #                 end
+    #             end
+    #         end
+    #     end
+
+    #     return true
+    # end
