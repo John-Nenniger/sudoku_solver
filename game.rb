@@ -69,13 +69,57 @@ class Game
                         @ruled_out_by_column[y].push(possibilities[0])
                         section_number = @@point_to_section_map[x][y]
                         @ruled_out_by_section[section_number].push(possibilities[0])
-                        return solve(grid)
+                        return solve_by_strict_elimination
                     end
                 end
             end
         end
     end
 
+    # def solve_by_section_elimination(section_number)
+    #     [1,2,3,4,5,6,7,8,9] - @ruled_out_by_section[section_number]
+        
+    # end
+    def try_all_rows
+        [0,1,2,3,4,5,6,7,8].each do |row_i|
+            solve_by_row_elimination(row_i)
+        end
+    end
+
+    def solve_by_row_elimination(x)
+        remaining_numbers = [1,2,3,4,5,6,7,8,9] - @ruled_out_by_row[x]
+
+        remaining_numbers.each do |remaining_number|
+            # [1, 5]
+            possible_y = []
+            [0,1,2,3,4,5,6,7,8].each do |y|
+                # p "iterating", remaining_number, y, possible_y
+                break if possible_y.length > 1
+                if grid[x][y] == 0
+                    possibilities = generate_possibilities_for_a_point(x, y)
+                    possible_y.push(y) if possibilities.include? remaining_number
+                end
+            end
+            if possible_y.length == 1
+                # p "Got one ----------------------- ", x, possible_y[0], remaining_number
+                @grid[x][possible_y[0]] = remaining_number
+                
+                @ruled_out_by_row[x].push(remaining_number)
+                @ruled_out_by_column[possible_y[0]].push(remaining_number)
+                section_number = @@point_to_section_map[x][possible_y[0]]
+                @ruled_out_by_section[section_number].push(remaining_number)
+            end
+        end
+    end
+
+    def aggressively_solve
+        while !solved?
+            try_all_rows
+            solve_by_strict_elimination
+            p @grid
+        end
+        p "solved"
+    end
 
     def solved?
         @grid.each do |row|
@@ -105,14 +149,13 @@ class Game
     private
 
     def generate_row_possibilities grid
-        # some spooky stuff to duplicate the 2 dimensional array
         possibilities = Marshal.load(Marshal.dump(grid))
         possibilities.each_with_index do |row, row_number|
-        # generate_possibility char
-        ruled_out_by_current_row = row.select{|x| x.is_a?(Numeric) && x != 0 }
-        @ruled_out_by_row[row_number] = ruled_out_by_current_row
+            ruled_out_by_current_row = row.select{|x| x.is_a?(Numeric) && x != 0 }
+            @ruled_out_by_row[row_number] = ruled_out_by_current_row
         end
     end
+
 
     def generate_column_possibilities grid
         char_index = 0
@@ -168,11 +211,21 @@ first_game = Game.new([
 ])
 
 
-p first_game.ruled_out_by_row
-p first_game.ruled_out_by_column
-p first_game.ruled_out_by_section
+# p "row", first_game.ruled_out_by_row
+# p "column", first_game.ruled_out_by_column
+# p "section", first_game.ruled_out_by_section
+# p first_game.grid
+first_game.solve_by_strict_elimination
+# first_game.solved?
+# p first_game.grid
+# p "row", first_game.ruled_out_by_row
+# p "column", first_game.ruled_out_by_column
+# p "section", first_game.ruled_out_by_section
+
 p first_game.grid
-p first_game.solved?
+p first_game.aggressively_solve
+p first_game.grid
+#  maybe i can eventually abstract out a function which can take either row, column, or section
 
 
 
