@@ -12,6 +12,18 @@ class Game
         [6,6,6,7,7,7,8,8,8],
         ]
 
+    @@points_by_section_number = {
+        0 => [],
+        1 => [],
+        2 => [],
+        3 => [],
+        4 => [],
+        5 => [],
+        6 => [],
+        7 => [],
+        8 => []
+        }
+
     def initialize(grid)
         # grid[*][column_number]
         @ruled_out_by_column = {
@@ -48,6 +60,7 @@ class Game
             7 => [],
             8 => []
         }
+
         @grid = grid
         generate_possibilities(grid)
     end
@@ -90,6 +103,10 @@ class Game
         @ruled_out_by_section
     end
 
+    def points_by_section_number
+        @@points_by_section_number
+    end
+
     def grid
         @grid
     end
@@ -99,6 +116,8 @@ class Game
     end
 
     private
+
+    # GENERATE POSSIBILITIES 
 
     def generate_row_possibilities grid
         possibilities = Marshal.load(Marshal.dump(grid))
@@ -146,6 +165,27 @@ class Game
         # p @ruled_out_by_section[section_number], 130
         return possibilities
     end
+
+
+    def get_points_in_a_section(section_number)
+        # this looks janky, but its actually a bit of lazy loading, which is pretty cool
+        # it's very unlikely we'll never need to create this data, but it's an interesting implementation of a concept
+        return @@points_by_section_number[section_number] unless @@points_by_section_number[section_number].empty?
+        points = []
+        @@point_to_section_map.each_with_index do |row, row_index|
+            row.each_with_index do |point, column_index|
+                if point === section_number
+                    points.push([column_index, row_index])
+                end
+                if points.length == 9
+                    @@points_by_section_number[section_number] = points
+                    return points
+                end
+            end
+        end
+    end
+
+    # SOLVEING
 
     def solve_by_strict_elimination
         # p "solve by strict"
@@ -226,6 +266,17 @@ class Game
         end
         false
     end
+
+    # def solve_by_section_elimination(section_number)    
+    #     remaining_numbers = [1,2,3,4,5,6,7,8,9] - @ruled_out_by_section[section_number]
+    #     if remaining_numbers.empty?
+    #         return true
+    #     end
+    #     # now i need ot get all the points in a given section... which is awkward
+    #     # is there any data structure I could create to make this easier? yes.. but is that a good idea?
+
+
+    # end
 
 end
 
