@@ -24,9 +24,8 @@ class Game
         8 => []
         }
 
-    def initialize(grid)
-        # grid[*][column_number]
-        @ruled_out_by_column = {
+    def initialize(grid) 
+        @ruled_out_by_column = { # grid[*][column_number]
             0 => [],
             1 => [],
             2 => [],
@@ -37,8 +36,8 @@ class Game
             7 => [],
             8 => []
         }
-        # grid[row_number][*]
-        @ruled_out_by_row = {
+       
+        @ruled_out_by_row = {  # grid[row_number][*]
             0 => [],
             1 => [],
             2 => [],
@@ -49,6 +48,7 @@ class Game
             7 => [],
             8 => []
         }
+
         @ruled_out_by_section = {
             0 => [],
             1 => [],
@@ -72,14 +72,19 @@ class Game
     end
 
     def solve
-        # while !solved?
+        count = 1
+        while !solved?
+            raise "Couldn't solve puzzle :/" if count > 100
             [0,1,2,3,4,5,6,7,8].each do |num|
                 solve_by_strict_elimination
                 solve_by_row_elimination(num)
                 solve_by_column_elimination(num)
+                solve_by_section_elimination(num)
             end
-        # solve_by_strict_elimination
-        # end
+            count += 1
+        end
+        puts pretty_grid
+        puts "Sudoku Solved!"
     end
 
     def solved?
@@ -157,12 +162,9 @@ class Game
 
     def generate_possibilities_for_a_point(x, y)
         possibilities = [1,2,3,4,5,6,7,8,9] - @ruled_out_by_row[x]
-        # p @ruled_out_by_row[x], 125
         possibilities = possibilities - @ruled_out_by_column[y]
         section_number = @@point_to_section_map[x][y]
-        # p @ruled_out_by_column[y]
         possibilities = possibilities - @ruled_out_by_section[section_number]
-        # p @ruled_out_by_section[section_number], 130
         return possibilities
     end
 
@@ -175,7 +177,7 @@ class Game
         @@point_to_section_map.each_with_index do |row, row_index|
             row.each_with_index do |point, column_index|
                 if point === section_number
-                    points.push([column_index, row_index])
+                    points.push([row_index, column_index])
                 end
                 if points.length == 9
                     @@points_by_section_number[section_number] = points
@@ -188,7 +190,6 @@ class Game
     # SOLVEING
 
     def solve_by_strict_elimination
-        # p "solve by strict"
         (0..8).each do |y|
             (0..8).each do |x|
                 if grid[x][y] == 0 
@@ -208,16 +209,13 @@ class Game
     end
 
     def solve_by_row_elimination(x)
-        # p "solve by row"
         remaining_numbers = [1,2,3,4,5,6,7,8,9] - @ruled_out_by_row[x]
         if remaining_numbers.empty?
             return true
         end
         remaining_numbers.each do |remaining_number|
-            # [1, 5]
             possible_y = []
             [0,1,2,3,4,5,6,7,8].each do |y|
-                # p "iterating", remaining_number, y, possible_y
                 break if possible_y.length > 1
                 if @grid[x][y] == 0
                     possibilities = generate_possibilities_for_a_point(x, y)
@@ -225,7 +223,6 @@ class Game
                 end
             end
             if possible_y.length == 1
-                p "Got one ----------------------- ", x, possible_y[0], remaining_number
                 @grid[x][possible_y[0]] = remaining_number
                 
                 @ruled_out_by_row[x].push(remaining_number)
@@ -239,7 +236,6 @@ class Game
     end
 
     def solve_by_column_elimination(y)
-        # p "solve by column"
         remaining_numbers = [1,2,3,4,5,6,7,8,9] - @ruled_out_by_row[y]
         if remaining_numbers.empty?
             return true
@@ -255,7 +251,6 @@ class Game
                end
             end
             if possible_x.length == 1
-                p "Got one ----------------------- ", possible_x[0], y, remaining_number
                 @grid[possible_x[0]][y] = remaining_number
                 @ruled_out_by_row[possible_x[0]].push(remaining_number)
                 @ruled_out_by_column[y].push(remaining_number)
@@ -267,90 +262,45 @@ class Game
         false
     end
 
-    # def solve_by_section_elimination(section_number)    
-    #     remaining_numbers = [1,2,3,4,5,6,7,8,9] - @ruled_out_by_section[section_number]
-    #     if remaining_numbers.empty?
-    #         return true
-    #     end
-    #     # now i need ot get all the points in a given section... which is awkward
-    #     # is there any data structure I could create to make this easier? yes.. but is that a good idea?
-
-
-    # end
-
+    def solve_by_section_elimination(section_number)    
+        remaining_numbers = [1,2,3,4,5,6,7,8,9] - @ruled_out_by_section[section_number]
+        return true if remaining_numbers.empty?
+        get_points_in_a_section(section_number) if @@points_by_section_number[section_number].empty?
+        remaining_numbers.each do |remaining_number|
+            possible_points = []
+            @@points_by_section_number[section_number].each do |point|
+                break if possible_points.length > 1
+                if @grid[point[0]][point[1]] == 0
+                    possibilities = generate_possibilities_for_a_point(point[0], point[1])
+                    possible_points.push(point) if possibilities.include? remaining_number
+                end
+            end
+            if possible_points.length == 1
+                point = possible_points[0]
+                @grid[point[0]][point[1]] = remaining_number
+                @ruled_out_by_section[section_number].push(remaining_number)
+                @ruled_out_by_row[point[0]].push(remaining_number)
+                @ruled_out_by_column[point[1]].push(remaining_number)
+                return solve_by_section_elimination(section_number)
+            end
+        end
+        false
+    end
 end
 
-
-first_game = Game.new([
-    [0,2,0,0,0,0,0,0,3],
-    [5,0,0,0,0,8,4,0,0],
-    [0,0,0,2,5,0,0,1,6],
-    [0,7,0,0,2,9,0,0,0],
-    [0,4,0,0,3,0,0,6,0],
-    [0,0,0,6,8,0,0,2,0],
-    [2,8,0,0,4,7,0,0,0],
-    [0,0,3,8,0,0,0,0,1],
-    [9,0,0,0,0,0,0,5,0],
+game = Game.new([
+    [0,0,2,0,0,0,0,3,4],
+    [0,6,4,2,0,0,5,0,0],
+    [8,0,0,0,7,5,0,0,0],
+    [0,0,7,0,4,0,0,5,1],
+    [0,0,0,0,9,8,0,0,3],
+    [1,0,0,0,0,0,2,0,0],
+    [0,4,0,0,0,3,0,8,0],
+    [3,5,0,6,0,0,4,0,0],
+    [0,0,0,0,1,0,0,9,7]
 ])
 
-
-# p "row", first_game.ruled_out_by_row
-# p "column", first_game.ruled_out_by_column
-# p "section", first_game.ruled_out_by_section
-# p first_game.grid
-# first_game.solve_by_strict_elimination
-# first_game.solved?
-# p first_game.grid
-# p "row", first_game.ruled_out_by_row
-# p "column", first_game.ruled_out_by_column
-# p "section", first_game.ruled_out_by_section
-
-puts first_game.pretty_grid
-p first_game.grid[6][5]
-p first_game.solve
-p first_game.grid[6][5]
-puts first_game.pretty_grid
-#  maybe i can eventually abstract out a function which can take either row, column, or section
+game.solve
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- # def solve(grid)
-    #     (0..8).each do |y|
-    #         (0..8).each do |x|
-    #             if grid[x][y] == 0 
-    #                 possibilities = generate_possibilities_for_a_point(x, y)
-    #                 if possibilities.length == 1
-    #                     grid[x][y] = possibilities[0]
-    #                     # p [x, y], possibilities[0]
-    #                     @ruled_out_by_row[x].push(possibilities[0])
-    #                     @ruled_out_by_column[y].push(possibilities[0])
-    #                     section_number = @@point_to_section_map[x][y]
-    #                     @ruled_out_by_section[section_number].push(possibilities[0])
-    #                     return solve(grid)
-    #                 end
-    #             end
-    #         end
-    #     end
-
-    #     return true
-    # end
